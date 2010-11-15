@@ -1,7 +1,13 @@
 from TAP.Simple import *
 import Rx
-import cjson
 import re
+
+try:
+    import cjson
+    decode = cjson.decode
+except ImportError:
+    import json
+    decode = json.loads
 
 plan(None)
 
@@ -9,21 +15,21 @@ rx = Rx.Factory({ "register_core_types": True });
 
 isa_ok(rx, Rx.Factory)
 
-index = cjson.decode(file('spec/index.json').read())
+index = decode(file('spec/index.json').read())
 
 test_data     = {}
 test_schemata = {}
 
 for filename in index:
   if filename == 'spec/index.json': continue
-  payload = cjson.decode(file(filename).read())
+  payload = decode(file(filename).read())
 
   parts = filename.split('/')
   parts.pop(0)
 
   leaf_name = '/'.join(parts[1:])
   leaf_name = re.sub('\.json$', '', leaf_name)
-  
+
   filetype = parts.pop(0)
 
   if filetype == 'schemata':
@@ -33,12 +39,12 @@ for filename in index:
 
     if type(payload) is type([]):
       for data_str in payload:
-        boxed_data = cjson.decode("[ %s ]" % data_str)
+        boxed_data = decode("[ %s ]" % data_str)
         test_data[ leaf_name ][ data_str ] = boxed_data[0]
 
     else:
       for entry in payload.keys():
-        boxed_data = cjson.decode("[ %s ]" % payload[entry])
+        boxed_data = decode("[ %s ]" % payload[entry])
         test_data[ leaf_name ][ entry ] = boxed_data[0]
   else:
     raise "weird file in data dir: %s" % filename
